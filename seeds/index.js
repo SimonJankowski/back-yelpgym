@@ -21,6 +21,10 @@ const seedDB = async () => {
     const gym = new Gym({
       location: `${cities[random25].city}, ${cities[random25].state}`,
       title: `${sample(descriptors)} ${sample(names)}`,
+      image: "https://source.unsplash.com/collection/10552289",
+      description:
+        "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Deleniti voluptas eaque doloremque est quo et quaerat illum quia dolor, dolores nam itaque quas! Quia, quos nemo? Commodi expedita vitae beatae!",
+      price,
     });
     await gym.save();
   }
