@@ -2,7 +2,10 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
+import catchAsync from "./utils/catchAsync.js";
+import ExpressError from "./utils/ExpressError.js";
 import Gym from "./models/gym.js";
+import { gymJoiSchema } from "./joiSchemas.js";
 
 const app = express();
 
@@ -14,11 +17,21 @@ db.once("open", () => {
 });
 
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "http://localhost:3000"
 };
 
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
+
+const validateGym = (req, res, next) => {
+  const { error } = gymJoiSchema.validate(req.body);
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(msg, 400);
+  } else {
+    next();
+  }
+};
 
 app.get("/", (req, res) => {
   res.send("hello from yelpgym");
@@ -29,12 +42,15 @@ app.get("/gyms", async (req, res) => {
   res.send({ gyms });
 });
 
-app.post("/gyms/new", async (req, res) => {
-  const gym = new Gym(req.body);
-  await gym.save();
-  console.log(gym);
-  res.status(200).send(gym._id);
-});
+app.post(
+  "/gyms/new",
+  validateGym,
+  catchAsync(async (req, res, next) => {
+    const gym = new Gym(req.body.gym);
+    await gym.save();
+    res.status(200).send(gym._id);
+  })
+);
 
 app.get("/gyms/:id", async (req, res) => {
   const gym = await Gym.findById(req.params.id);
@@ -50,6 +66,16 @@ app.post("/gyms/:id/update", async (req, res) => {
 app.get("/gyms/:id/delete", async (req, res) => {
   const gym = await Gym.findByIdAndDelete(req.params.id);
   res.status(200).send("ok");
+});
+
+app.all("*", (req, res, next) => {
+  next(new ExpressError("Page not found", 404));
+});
+
+app.use((err, req, res, next) => {
+  const { statusCode = 500 } = err;
+  if (!err.message) err.message = "Something went wrong";
+  res.status(statusCode).send(err);
 });
 
 app.listen(3001, () => {
