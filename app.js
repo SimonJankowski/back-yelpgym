@@ -5,7 +5,10 @@ import bodyParser from "body-parser";
 import catchAsync from "./utils/catchAsync.js";
 import ExpressError from "./utils/ExpressError.js";
 import Gym from "./models/gym.js";
-import { gymJoiSchema } from "./joiSchemas.js";
+import Review from "./models/review.js";
+import { gymJoiSchema, reviewSchema } from "./joiSchemas.js";
+import gyms from "./routes/gyms.js";
+import reviews from "./routes/reviews.js";
 
 const app = express();
 
@@ -23,8 +26,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-const validateGym = (req, res, next) => {
-  const { error } = gymJoiSchema.validate(req.body);
+const validateReview = (req, res, next) => {
+  const { error } = reviewSchema.validate(req.body);
   if (error) {
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
@@ -33,40 +36,34 @@ const validateGym = (req, res, next) => {
   }
 };
 
+app.use("/gyms", gyms);
+app.use("/gyms/:id/reviews", reviews);
+
 app.get("/", (req, res) => {
   res.send("hello from yelpgym");
 });
 
-app.get("/gyms", async (req, res) => {
-  const gyms = await Gym.find({});
-  res.send({ gyms });
-});
+// app.post(
+//   "/gyms/:id/reviews",
+//   validateReview,
+//   catchAsync(async (req, res) => {
+//     const gym = await Gym.findById(req.params.id);
+//     const review = new Review(req.body.review);
+//     gym.reviews.push(review);
+//     review.save();
+//     gym.save();
+//     res.status(200).send("you made it");
+//   })
+// );
 
-app.post(
-  "/gyms/new",
-  validateGym,
-  catchAsync(async (req, res, next) => {
-    const gym = new Gym(req.body.gym);
-    await gym.save();
-    res.status(200).send(gym._id);
-  })
-);
-
-app.get("/gyms/:id", async (req, res) => {
-  const gym = await Gym.findById(req.params.id);
-  res.send({ gym });
-});
-
-app.post("/gyms/:id/update", async (req, res) => {
-  console.log(req.body);
-  const gym = await Gym.findByIdAndUpdate(req.params.id, { ...req.body });
-  res.status(200).send(gym._id);
-});
-
-app.get("/gyms/:id/delete", async (req, res) => {
-  const gym = await Gym.findByIdAndDelete(req.params.id);
-  res.status(200).send("ok");
-});
+// app.get(
+//   "/gyms/:gymId/deleteReview/:reviewId",
+//   catchAsync(async (req, res, next) => {
+//     await Gym.findByIdAndUpdate(req.params.id, { $pull: { reviews: req.params.reviewId } });
+//     await Review.findByIdAndDelete(req.params.reviewId);
+//     res.status(200).send("review deleted");
+//   })
+// );
 
 app.all("*", (req, res, next) => {
   next(new ExpressError("Page not found", 404));
