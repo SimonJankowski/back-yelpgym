@@ -9,6 +9,7 @@ import Review from "./models/review.js";
 import { gymJoiSchema, reviewSchema } from "./joiSchemas.js";
 import gyms from "./routes/gyms.js";
 import reviews from "./routes/reviews.js";
+import session from "express-session";
 
 const app = express();
 
@@ -20,9 +21,21 @@ db.once("open", () => {
 });
 
 const corsOptions = {
-  origin: "http://localhost:3000"
+  origin: "http://localhost:3000",
+  credentials: true
+};
+const sessionConfig = {
+  secret: "bob",
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  }
 };
 
+app.use(session(sessionConfig));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
