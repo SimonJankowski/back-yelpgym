@@ -31,24 +31,32 @@ router.post(
   })
 );
 
-router.get("/:id", async (req, res) => {
-  const gym = await Gym.findById(req.params.id).populate("reviews");
-  res.send({ gym });
-});
+router.get(
+  "/:id",
+  catchAsync(async (req, res) => {
+    const gym = await Gym.findById(req.params.id).populate("reviews");
+    res.send({ gym });
+  })
+);
 
 router.post(
   "/:id/update",
   validateGym,
   catchAsync(async (req, res, next) => {
-    console.log(req.body);
     const gym = await Gym.findByIdAndUpdate(req.params.id, { ...req.body.gym });
     res.status(200).send(gym._id);
   })
 );
 
-router.get("/:id/delete", async (req, res) => {
-  const gym = await Gym.findByIdAndDelete(req.params.id);
-  res.status(200).send("ok");
-});
+router.get(
+  "/:id/delete",
+  catchAsync(async (req, res) => {
+    const gym = await Gym.deleteOne({ _id: req.params.id });
+    if (!gym) {
+      res.status(404).send("gym does not exist");
+    }
+    res.status(200).send("gym deleted successfully");
+  })
+);
 
 export default router;
