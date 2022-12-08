@@ -2,14 +2,14 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bodyParser from "body-parser";
-import catchAsync from "./utils/catchAsync.js";
 import ExpressError from "./utils/ExpressError.js";
-import Gym from "./models/gym.js";
-import Review from "./models/review.js";
-import { gymJoiSchema, reviewSchema } from "./joiSchemas.js";
 import gyms from "./routes/gyms.js";
 import reviews from "./routes/reviews.js";
 import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import User from "./models/user.js";
+import users from "./routes/users.js";
 
 const app = express();
 
@@ -38,45 +38,25 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-const validateReview = (req, res, next) => {
-  const { error } = reviewSchema.validate(req.body);
-  if (error) {
-    const msg = error.details.map((el) => el.message).join(",");
-    throw new ExpressError(msg, 400);
-  } else {
-    next();
-  }
-};
-
+app.use("/", users);
 app.use("/gyms", gyms);
 app.use("/gyms/:id/reviews", reviews);
+
+app.get("/fakeUser", async (req, res) => {
+  const user = new User({ email: "colt@gmail.com", username: "colttt" });
+  const newUser = await User.register(user, "chicken");
+  res.send(newUser);
+});
 
 app.get("/", (req, res) => {
   res.send("hello from yelpgym");
 });
-
-// app.post(
-//   "/gyms/:id/reviews",
-//   validateReview,
-//   catchAsync(async (req, res) => {
-//     const gym = await Gym.findById(req.params.id);
-//     const review = new Review(req.body.review);
-//     gym.reviews.push(review);
-//     review.save();
-//     gym.save();
-//     res.status(200).send("you made it");
-//   })
-// );
-
-// app.get(
-//   "/gyms/:gymId/deleteReview/:reviewId",
-//   catchAsync(async (req, res, next) => {
-//     await Gym.findByIdAndUpdate(req.params.id, { $pull: { reviews: req.params.reviewId } });
-//     await Review.findByIdAndDelete(req.params.reviewId);
-//     res.status(200).send("review deleted");
-//   })
-// );
 
 app.all("*", (req, res, next) => {
   next(new ExpressError("Page not found", 404));
@@ -84,8 +64,10 @@ app.all("*", (req, res, next) => {
 
 app.use((err, req, res, next) => {
   const { statusCode = 500 } = err;
-  if (!err.message) err.message = "Something went wrong";
-  res.status(statusCode).send(err);
+  if (!err.message) {
+    err.message = "Something went wrong";
+    res.status(statusCode).send(err);
+  }
 });
 
 app.listen(3001, () => {
