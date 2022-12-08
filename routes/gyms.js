@@ -3,6 +3,7 @@ import catchAsync from "../utils/catchAsync.js";
 import ExpressError from "../utils/ExpressError.js";
 import Gym from "../models/gym.js";
 import { gymJoiSchema, reviewSchema } from "../joiSchemas.js";
+import isLoggedIn from "../middleware.js";
 
 const router = express.Router();
 
@@ -17,12 +18,14 @@ const validateGym = (req, res, next) => {
 };
 
 router.get("/", async (req, res) => {
+  console.log(req.isAuthenticated());
   const gyms = await Gym.find({});
   res.send({ gyms });
 });
 
 router.post(
   "/new",
+  //isLoggedIn,
   validateGym,
   catchAsync(async (req, res, next) => {
     const gym = new Gym(req.body.gym);
@@ -41,6 +44,7 @@ router.get(
 
 router.post(
   "/:id/update",
+  isLoggedIn,
   validateGym,
   catchAsync(async (req, res, next) => {
     const gym = await Gym.findByIdAndUpdate(req.params.id, { ...req.body.gym });
@@ -50,6 +54,7 @@ router.post(
 
 router.get(
   "/:id/delete",
+  isLoggedIn,
   catchAsync(async (req, res) => {
     const gym = await Gym.deleteOne({ _id: req.params.id });
     if (!gym) {
