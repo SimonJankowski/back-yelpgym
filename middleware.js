@@ -35,7 +35,6 @@ export const validateReview = (req, res, next) => {
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
   } else {
-    console.log("i runnnn");
     next();
   }
 };
@@ -45,7 +44,7 @@ export const isReviewAuthor = async (req, res, next) => {
   const review = await Review.findById(reviewId);
   console.log("checking review author");
   if (!review.author.equals(req.user._id)) {
-    console.log("it is nopt an  author");
+    console.log("it is not an  author");
     return res.status(401).send("You don´t have permission to do that");
   }
   next();
