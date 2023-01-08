@@ -11,7 +11,9 @@ export const isLoggedIn = (req, res, next) => {
 };
 export const validateGym = (req, res, next) => {
   const { error } = gymJoiSchema.validate(req.body);
+  console.log("error", error);
   if (error) {
+    console.log("error validating gym");
     const msg = error.details.map((el) => el.message).join(",");
     throw new ExpressError(msg, 400);
   } else {
