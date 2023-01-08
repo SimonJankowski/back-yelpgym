@@ -1,4 +1,5 @@
 import Gym from "../models/gym.js";
+import cloudinary from "../cloudinary/index.js";
 
 export const index = async (req, res) => {
   console.log("Wdo i hit that route");
@@ -7,6 +8,7 @@ export const index = async (req, res) => {
 };
 
 export const createGym = async (req, res, next) => {
+  console.log("creating the gym");
   const gym = new Gym(req.body.gym);
   gym.author = req.user._id;
   await gym.save();
@@ -22,7 +24,16 @@ export const showGym = async (req, res) => {
 
 export const updateGym = async (req, res, next) => {
   const { id } = req.params;
-  const gym = await Gym.findByIdAndUpdate(id, { ...req.body.gym });
+  const newImgs = req.body.gym.images;
+  const { deletedImages } = req.body;
+  deletedImages.forEach((element) => {
+    console.log(element);
+    cloudinary.uploader.destroy(element);
+  });
+  const oldGym = await Gym.findById(id);
+  const foundimgs = oldGym.images.filter((img) => !deletedImages.includes(img.filename));
+  const imgs = [...newImgs, ...foundimgs];
+  const gym = await Gym.findByIdAndUpdate(id, { ...req.body.gym, images: imgs });
   return res.status(200).send(id);
 };
 
