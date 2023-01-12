@@ -6,6 +6,17 @@ const GymSchema = new Schema({
   title: String,
   images: [{ url: String, filename: String }],
   price: Number,
+  geometry: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true
+    },
+    coordinates: {
+      type: [Number],
+      required: true
+    }
+  },
   description: String,
   location: String,
   author: {

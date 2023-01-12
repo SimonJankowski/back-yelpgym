@@ -1,5 +1,9 @@
+import mbxGeocoding from "@mapbox/mapbox-sdk/services/geocoding.js";
 import Gym from "../models/gym.js";
 import cloudinary from "../cloudinary/index.js";
+
+const mapBoxToken = process.env.MAPBOX_TOKEN;
+const geoCoder = mbxGeocoding({ accessToken: mapBoxToken });
 
 export const index = async (req, res) => {
   console.log("Wdo i hit that route");
@@ -8,8 +12,15 @@ export const index = async (req, res) => {
 };
 
 export const createGym = async (req, res, next) => {
+  const geoData = await geoCoder
+    .forwardGeocode({
+      query: req.body.gym.location,
+      limit: 1
+    })
+    .send();
   console.log("creating the gym");
   const gym = new Gym(req.body.gym);
+  gym.geometry = geoData.body.features[0].geometry;
   gym.author = req.user._id;
   await gym.save();
   res.status(200).send(gym._id);
