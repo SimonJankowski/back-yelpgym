@@ -22,6 +22,10 @@ const seedDB = async () => {
       author: "638c930b5eb6d1560db769e5",
       location: `${cities[random25].city}, ${cities[random25].state}`,
       title: `${sample(descriptors)} ${sample(names)}`,
+      geometry: {
+        type: "Point",
+        coordinates: [2.177432, 41.382894]
+      },
       images: [
         { url: "https://source.unsplash.com/collection/10552289", filename: "default gym" },
         { url: "https://source.unsplash.com/collection/10552289", filename: "default gym2" }
