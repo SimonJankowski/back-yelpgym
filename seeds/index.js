@@ -15,16 +15,16 @@ const sample = (array) => array[Math.floor(Math.random() * array.length)];
 const seedDB = async () => {
   await Gym.deleteMany({});
   for (let i = 0; i < 25; i++) {
-    const random25 = Math.floor(Math.random() * 25);
+    const random1000 = Math.floor(Math.random() * 1000);
     const random6 = Math.floor(Math.random() * 6);
     const price = Math.floor(Math.random() * 100) + 10;
     const gym = new Gym({
       author: "638c930b5eb6d1560db769e5",
-      location: `${cities[random25].city}, ${cities[random25].state}`,
+      location: `${cities[random1000].city}, ${cities[random1000].state}`,
       title: `${sample(descriptors)} ${sample(names)}`,
       geometry: {
         type: "Point",
-        coordinates: [2.177432, 41.382894]
+        coordinates: [cities[random1000].longitude, cities[random1000].latitude]
       },
       images: [
         { url: "https://source.unsplash.com/collection/10552289", filename: "default gym" },
